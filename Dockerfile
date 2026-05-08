@@ -1,6 +1,13 @@
-FROM node:20-buster as installer
+FROM node:20-bullseye as installer
 COPY . /juice-shop
 WORKDIR /juice-shop
+
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+
+Run npm config set strict-ssl false
+RUN git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+Run git config --global http.sslVerify false
+
 RUN npm i -g typescript ts-node
 RUN npm install --omit=dev --unsafe-perm
 RUN npm dedupe
@@ -20,7 +27,7 @@ RUN npm install -g @cyclonedx/cyclonedx-npm@$CYCLONEDX_NPM_VERSION
 RUN npm run sbom
 
 # workaround for libxmljs startup error
-FROM node:20-buster as libxmljs-builder
+FROM node:20-bullseye as libxmljs-builder
 WORKDIR /juice-shop
 RUN apt-get update && apt-get install -y build-essential python3
 COPY --from=installer /juice-shop/node_modules ./node_modules
